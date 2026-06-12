@@ -26,10 +26,12 @@ def run_for_window(returns, macro_df, window_days):
     ret_window = returns.iloc[-window_days:]
     raw_scores = {}
     for ticker in ret_window.columns:
-        s = symplectic_score(ret_window[ticker].values, n_bins=config.N_BINS)
-        if not np.isfinite(s):
-            s = 0.0
-        raw_scores[ticker] = float(s)
+        ent = symplectic_score(ret_window[ticker].values, n_bins=config.N_BINS)
+        if not np.isfinite(ent):
+            ent = 0.0
+        # INVERT: low entropy -> high score
+        score = 1.0 / (1.0 + ent)
+        raw_scores[ticker] = float(score)
     norm_scores = normalize_scores(raw_scores)
     sorted_norm = sorted(norm_scores.items(), key=lambda x: x[1], reverse=True)
     top_etfs = [{"ticker": t, "symp_score_norm": s, "raw_score": raw_scores[t]} for t, s in sorted_norm[:config.TOP_N]]
